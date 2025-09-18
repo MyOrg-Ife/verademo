@@ -23,7 +23,7 @@ jobs:
           restore-keys: maven-${{ runner.os }}-
 
       - name: Build with Maven (skip tests)
-        run: mvn -B -DskipTests package
+        run: mvn -B clean package -DskipTests --file pom.xml
 
       - name: Veracode Upload & Scan
         uses: veracode/veracode-uploadandscan-action@0.2.8
