@@ -1,0 +1,21 @@
+name: Veracode Policy Scan
+on: [pull_request, push]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Zip source
+        run: zip -r artifact.zip .
+
+      - name: Veracode Upload & Scan
+        uses: veracode/upload-and-scan@v1
+        with:
+          appname: ${{ github.repository }}
+          createprofile: true
+          filepath: artifact.zip
+          scantimeout: 30
+          vid: ${{ secrets.VERACODE_API_ID }}
+          vkey: ${{ secrets.VERACODE_API_KEY }}
