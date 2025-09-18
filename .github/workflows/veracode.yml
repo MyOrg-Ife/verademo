@@ -11,7 +11,7 @@ jobs:
         run: zip -r artifact.zip .
 
       - name: Veracode Upload & Scan
-        uses: veracode/upload-and-scan@v1
+        uses: veracode/veracode-uploadandscan-action@v1
         with:
           appname: ${{ github.repository }}
           createprofile: true
