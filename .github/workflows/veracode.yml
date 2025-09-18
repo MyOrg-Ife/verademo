@@ -1,18 +1,22 @@
-name: Veracode Policy Scan
+name: Veracode Upload & Scan
 on: [pull_request, push]
 
 jobs:
   scan:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '11'
 
-      - uses: actions/cache@v4
+      - name: Cache Maven
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: maven-${{ runner.os }}-${{ hashFiles('app/pom.xml') }}
@@ -22,7 +26,6 @@ jobs:
         run: mvn -B clean package -DskipTests
         working-directory: app
 
-      # Trim CR/LF just in case the secrets had a hidden newline
       - name: Normalize Veracode secrets
         run: |
           echo "VID=$(printf '%s' '${{ secrets.VERACODE_API_ID }}' | tr -d '\r\n')" >> "$GITHUB_ENV"
@@ -31,11 +34,13 @@ jobs:
       - name: Veracode Upload & Scan
         uses: veracode/veracode-uploadandscan-action@0.2.8
         with:
-          appname: verademo
-          createprofile: true
-          filepath: app/target/verademo.war
+          appname: "Ife Banire Technical Panel" 
+          createprofile: false                   
+          createsandbox: false                   
+          filepath: app/target/verademo.war     
           version: ${{ github.sha }}
           scantimeout: 30
           vid: ${{ env.VID }}
           vkey: ${{ env.VKEY }}
+
 
