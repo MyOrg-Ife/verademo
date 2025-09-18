@@ -4,18 +4,41 @@ on: [pull_request, push]
 jobs:
   scan:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Zip source
-        run: zip -r artifact.zip .
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+
+      - name: Cache Maven
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: maven-${{ runner.os }}-
+
+      - name: Build with Maven (skip tests)
+        run: mvn -B -DskipTests package
 
       - name: Veracode Upload & Scan
         uses: veracode/veracode-uploadandscan-action@0.2.8
         with:
-          appname: ${{ github.repository }}
+          appname: verademo
           createprofile: true
-          filepath: artifact.zip
+          filepath: target/verademo.war
+          version: ${{ github.sha }}
           scantimeout: 30
           vid: ${{ secrets.VERACODE_API_ID }}
           vkey: ${{ secrets.VERACODE_API_KEY }}
+
+      - name: Validate secrets present
+        if: ${{ failure() }}
+        run: |
+          [ -z "${{ secrets.VERACODE_API_ID }}" ] && echo "Missing VERACODE_API_ID" && exit 1 || true
+          [ -z "${{ secrets.VERACODE_API_KEY }}" ] && echo "Missing VERACODE_API_KEY" && exit 1 || true
+
